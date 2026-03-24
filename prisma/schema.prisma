@@ -27,4 +27,16 @@ model Merchant {
   email     String   @unique
   password  String
   createdAt DateTime @default(now())
+
+  Order Order[]
+}
+
+model Order {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  amount      Float
+  description String
+  status      String   @default("PENDING")
+  merchantId  String   @db.ObjectId
+  merchant    Merchant @relation(fields: [merchantId], references: [id])
+  createdAt   DateTime @default(now())
 }
