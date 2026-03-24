@@ -7,9 +7,19 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: password
-
+    command: --replSet rs0 --keyFile /etc/mongo-keyfile --bind_ip_all
     volumes:
-      - 'mongo-data:/data/db'
+      - mongo-data:/data/db
+      - ./mongo-keyfile:/etc/mongo-keyfile:ro
+
+  mongo-init:
+    image: mongo:7
+    depends_on:
+      - mongodb
+    restart: on-failure
+    entrypoint: >
+      mongosh --host mongodb -u root -p password --authenticationDatabase admin --eval
+      "try { rs.status() } catch(e) { rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'mongodb:27017' }] }) }"
 
   redis:
     image: redis:7-alpine
@@ -17,7 +27,7 @@ services:
     ports:
       - '6379:6379'
     volumes:
-      - 'redis-data:/data'
+      - redis-data:/data
 
 volumes:
   mongo-data:
